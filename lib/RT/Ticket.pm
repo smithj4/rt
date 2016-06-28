@@ -3041,7 +3041,39 @@ sub CurrentUserCanSeeTime {
            !RT->Config->Get('HideTimeFieldsFromUnprivilegedUsers');
 }
 
-1;
+sub _DateForCustomDateRangeField {
+    my $self  = shift;
+    my $field = shift;
+
+       if (lc($field) eq 'created')  { return $self->CreatedObj }
+    elsif (lc($field) eq 'starts')   { return $self->StartsObj }
+    elsif (lc($field) eq 'started')  { return $self->StartedObj }
+    elsif (lc($field) eq 'due')      { return $self->DueObj }
+    elsif (lc($field) eq 'resolved') { return $self->ResolvedObj }
+    elsif ($field =~ /^(?:told|last ?contact)$/i) {
+        return $self->ToldObj;
+    }
+    elsif ($field =~ /^last ?updated$/i) {
+        return $self->LastUpdatedObj;
+    }
+    else {
+        return $self->SUPER::_DateForCustomDateRangeField($field, @_);
+    }
+}
+
+sub _CustomDateRangeFieldParser {
+    my $self = shift;
+    return $self->SUPER::_CustomDateRangeFieldParser . '|' . qr{
+          created
+        | starts
+        | started
+        | last \ ? updated
+        | told
+        | last \ ? contact
+        | due
+        | resolved
+    }xi;
+}
 
 =head1 AUTHOR
 
